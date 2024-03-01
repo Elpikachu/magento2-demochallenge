@@ -1,0 +1,146 @@
+applications:
+  magento:
+    source:
+      root: "/"
+
+    type: "php:8.1"
+
+    container_profile: BALANCED
+
+    relationships:
+      database: "db:mysql"
+      opensearch: "opensearch:opensearch"
+      rabbitmq: "queue:rabbitmq"
+      redis: "cache:redis"
+   
+    dependencies:
+      php:
+        composer/composer: "^2"
+
+    build:
+      flavor: composer
+
+    runtime:
+      extensions:
+        - xsl
+        - sodium
+        - redis
+        - blackfire
+
+    hooks:
+      build: |
+        set -e
+         php ./vendor/bin/ece-tools build:generate
+         php ./vendor/bin/ece-tools build:transfer
+      deploy: |
+        set -e
+        php ./vendor/bin/ece-tools deploy
+        bin/magento config:set twofactorauth/general/enable 0
+        bash adminuser_setup.sh
+      post_deploy: |
+        set -e
+        php ./vendor/bin/ece-tools post-deploy  
+
+    mounts:
+        "/var":
+            source: tmp
+            source_path: "var"
+        "/app/etc":
+            source: storage
+            source_path: "etc"
+        "/pub/media":
+            source: storage
+            source_path: "media"
+        "/pub/static":
+            source: storage
+            source_path: "static"
+
+    web:
+      commands:
+        start: /usr/bin/start-php-app
+        pre_start: |
+            [ -d /tmp/var ] || mkdir /tmp/var
+      locations:
+        "/":
+          root: "pub"
+          passthru: "/index.php"
+          index:
+              - index.php
+          expires: -1
+          scripts: true
+          allow: false
+          rules:
+              \.(css|js|map|hbs|gif|jpe?g|png|tiff|wbmp|ico|jng|bmp|svgz|midi?|mp?ga|mp2|mp3|m4a|ra|weba|3gpp?|mp4|mpe?g|mpe|ogv|mov|webm|flv|mng|asx|asf|wmv|avi|ogx|swf|jar|ttf|eot|woff|otf|html?)$:
+                  allow: true
+        "/media":
+            root: "pub/media"
+            allow: true
+            scripts: false
+            expires: 1y
+            passthru: "/get.php"
+        "/static":
+            root: "pub/static"
+            allow: true
+            scripts: false
+            expires: 1y
+            passthru: "/front-static.php"
+            rules:
+                ^/static/version\d+/(?<resource>.*)$:
+                    passthru: "/static/$resource"
+          
+        
+
+    # Alternate copies of the application to run as background processes.
+    # More information: https://docs.upsun.com/create-apps/app-reference.html#workers
+    # workers:
+
+    # Access control for roles accessing app environments.
+    # More information: https://docs.upsun.com/create-apps/app-reference.html#access
+    # access:
+
+    # Outbound firewall rules for the application. More information: https://docs.upsun.com/create-apps/app-reference.html#firewall
+    # firewall:
+
+    crons:
+        magento:
+            spec: "*/5 * * * *"
+            cmd: bash -c 'for group in $(grep -shoP "(?<=<group id=\")(.+)(?=\">)" {app,vendor}/*/*/etc/cron_groups.xml); do echo -n Running cron group ${group} --- && php -d memory_limit=-1 bin/magento cron:run --group=${group}; done'
+        logrotate:
+            spec: "45 1 * * *"
+            cmd: shtool rotate -n10 $PLATFORM_APP_DIR/var/log/*.log
+        reportcleanup:
+            spec: "0 2 * * *"
+            cmd: find $PLATFORM_APP_DIR/var/report/* -mtime +10 -delete
+
+
+    # More information: https://docs.upsun.com/create-apps/app-reference.html#additional-hosts
+    # additional_hosts:
+
+services:
+  db:
+    type: mariadb:10.2 # All available versions are: 10.6, 10.5, 10.4, 10.3
+
+  cache:
+    type: redis:7.0 # All available versions are: 7.0, 6.2
+
+  opensearch:
+    type: opensearch:2 # All available versions are: 2, 1.2, 1.1
+
+  queue:
+    type: rabbitmq:3.11 # All available versions are: 3.11, 3.10, 3.9
+
+routes:
+  "https://{default}/":
+    type: upstream
+    upstream: "magento:http"
+
+  "https://www.{default}":
+    type: redirect
+    to: "https://{default}/"
+
+  "https://{default}/static/":
+    type: upstream
+    upstream: magento:http
+    cache:
+      enabled: true
+      cookies: []
