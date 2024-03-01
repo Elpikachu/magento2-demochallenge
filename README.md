@@ -11,8 +11,8 @@ The application is configured to use the following services & runtimes:
 With the help of some additional packages, like the ece-tools, the deploy becomes easier and faster.
 
 ## Projects
-- Platform.sh: 
-- Upsun: 
+- Platform.sh: https://console.platform.sh/solutions/7qkgq43qy3qcu 
+- Upsun: https://console.upsun.com/solutions/zgs2f2ea3vmli 
 
 
 ## Customizations needed to run
