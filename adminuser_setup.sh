@@ -11,6 +11,9 @@ admin_user=$(mysql --host=$DB_HOST --port=$DB_PORT --user=$DB_USER --password=$D
 if [[ -z "$admin_user" ]]; then
     echo "No admin user set. Creating …"
     php $PLATFORM_APP_DIR/bin/magento admin:user:create --admin-user=admin --admin-password=Admin123 --admin-email=demo_admin@example.com --admin-firstname=admin --admin-lastname=admin
+    php $PLATFORM_APP_DIR/bin/magento config:set admin/security/password_lifetime 0
 else
     echo "Admin user exists. Skipping."
+    echo "Removing password lifetime for demo."
+    php $PLATFORM_APP_DIR/bin/magento config:set admin/security/password_lifetime 0
 fi
