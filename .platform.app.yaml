@@ -1,5 +1,5 @@
 name: magento
-type: php:8.1
+type: php:8.3
 
 runtime:
     extensions:

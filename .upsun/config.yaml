@@ -3,7 +3,7 @@ applications:
     source:
       root: "/"
 
-    type: "php:8.1"
+    type: "php:8.3"
 
     container_profile: BALANCED
 
@@ -118,16 +118,16 @@ applications:
 
 services:
   db:
-    type: mariadb:10.2 # All available versions are: 10.6, 10.5, 10.4, 10.3
+    type: mariadb:10.6 # All available versions are: 10.6, 10.5, 10.4, 10.3
 
   cache:
-    type: redis:7.0 # All available versions are: 7.0, 6.2
+    type: redis:7.2 # All available versions are: 7.0, 6.2
 
   opensearch:
     type: opensearch:2 # All available versions are: 2, 1.2, 1.1
 
   queue:
-    type: rabbitmq:3.11 # All available versions are: 3.11, 3.10, 3.9
+    type: rabbitmq:3.13 # All available versions are: 3.11, 3.10, 3.9
 
 routes:
   "https://{default}/":
