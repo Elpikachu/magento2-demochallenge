@@ -87,19 +87,6 @@ applications:
             rules:
                 ^/static/version\d+/(?<resource>.*)$:
                     passthru: "/static/$resource"
-          
-        
-
-    # Alternate copies of the application to run as background processes.
-    # More information: https://docs.upsun.com/create-apps/app-reference.html#workers
-    # workers:
-
-    # Access control for roles accessing app environments.
-    # More information: https://docs.upsun.com/create-apps/app-reference.html#access
-    # access:
-
-    # Outbound firewall rules for the application. More information: https://docs.upsun.com/create-apps/app-reference.html#firewall
-    # firewall:
 
     crons:
         magento:
@@ -111,10 +98,6 @@ applications:
         reportcleanup:
             spec: "0 2 * * *"
             cmd: find $PLATFORM_APP_DIR/var/report/* -mtime +10 -delete
-
-
-    # More information: https://docs.upsun.com/create-apps/app-reference.html#additional-hosts
-    # additional_hosts:
 
 services:
   db:
